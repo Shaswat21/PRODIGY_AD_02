@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:todo_app/models/todo_model.dart';
+import 'package:todo_app/helper/Todos.dart';
+import 'package:todo_app/helper/todo_model.dart';
+import 'package:todo_app/main.dart';
 import 'package:todo_app/widgets/button.dart';
 import 'package:todo_app/widgets/checkbox.dart';
 
@@ -14,13 +16,18 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   final TextEditingController taskNameController = TextEditingController();
   final TextEditingController dueDateController = TextEditingController();
-  List<Todo> todos = [
-    Todo(isCompleted: true, task: 'New Task', dueDate: '21-May-24'),
-    Todo(isCompleted: false, task: 'New Task', dueDate: '23-May-24'),
-    Todo(isCompleted: false, task: 'seohioehgvoneoihewghdvsoisnvise', dueDate: '23-May-24'),
-    Todo(isCompleted: false, task: 'New Task', dueDate: '05-May-24'),
-  ];
+  List<Todo> todos = [];
   List<Todo> todayTodo = [];
+
+  @override
+  void initState() {
+    super.initState();
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    todos = Todos.getTodos();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +61,8 @@ class _DashboardState extends State<Dashboard> {
                           task: taskNameController.text,
                           dueDate: dueDateController.text));
                     });
+                    box.put('todos', todos);
+                    Todos.write(todos);
                     Navigator.pop(context);
                   }),
             );
@@ -118,7 +127,7 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  Widget buildTodo(List<Todo> todos) {
+  Widget buildTodo(List todos) {
     return Column(
       children: todos.map(
         (todo) {
@@ -137,16 +146,20 @@ class _DashboardState extends State<Dashboard> {
                           : Theme.of(context).dividerColor),
                   borderRadius: BorderRadius.circular(20)),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0,vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
                         CustomCheck(
-                          onChanged: (value) => setState(() {
-                            todo.isCompleted = value;
-                          }),
+                          onChanged: (value) {
+                            setState(() {
+                              todo.isCompleted = value;
+                            });
+                            Todos.write(this.todos);
+                          },
                           value: todo.isCompleted,
                         ),
                         SizedBox(
@@ -177,6 +190,7 @@ class _DashboardState extends State<Dashboard> {
                                         todo.task = taskNameController.text;
                                         todo.dueDate = dueDateController.text;
                                       });
+                                      Todos.write(this.todos);
                                       Navigator.pop(context);
                                     }),
                               ),
@@ -202,9 +216,12 @@ class _DashboardState extends State<Dashboard> {
                           width: 10,
                         ),
                         GestureDetector(
-                          onTap: () => setState(() {
-                            this.todos.remove(todo);
-                          }),
+                          onTap: () {
+                            setState(() {
+                              this.todos.remove(todo);
+                            });
+                            Todos.write(this.todos);
+                          },
                           child: Container(
                             decoration: BoxDecoration(
                                 border: Border.all(
